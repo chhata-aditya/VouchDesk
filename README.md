@@ -1,74 +1,50 @@
 # VouchDesk
 
-> A secure, role-based Expense Voucher Management System designed for modern organizations to streamline expense claims, director approvals, digital signature workflows, and accounts auditing.
-
-[![React](https://img.shields.io/badge/Frontend-React_18_%7C_Vite-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Node.js](https://img.shields.io/badge/Backend-Node.js_Express-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![JWT](https://img.shields.io/badge/Auth-JWT_%26_Bcrypt-000000?logo=json-web-tokens&logoColor=white)](https://jwt.io/)
+> Expense Voucher Management System with role-based access control (Employee, Director, Accounts) for expense claim submission, digital signatures, director approvals, and accounts auditing.
 
 ---
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Project Setup Instructions](#project-setup-instructions)
-   - [Prerequisites](#prerequisites)
-   - [Environment Configuration](#environment-configuration)
-   - [Quick Start (Windows 1-Click)](#quick-start-windows-1-click)
-   - [Step-by-Step Manual Setup (All Platforms)](#step-by-step-manual-setup-all-platforms)
-   - [Demo User Credentials](#demo-user-credentials)
-3. [Database Schema Explanation](#database-schema-explanation)
-   - [Architecture & ER Overview](#architecture--er-overview)
-   - [Entity Breakdown & Schema Definitions](#entity-breakdown--schema-definitions)
-   - [Auto-Incrementing Voucher Number Sequence](#auto-incrementing-voucher-number-sequence)
-   - [Database Migration & Seed Script](#database-migration--seed-script)
-4. [API Documentation](#api-documentation)
-   - [Authentication & Session Flow](#authentication--session-flow)
-   - [Auth & Profile Endpoints](#auth--profile-endpoints)
-   - [Dashboard Analytics Endpoints](#dashboard-analytics-endpoints)
-   - [Vouchers Endpoints](#vouchers-endpoints)
-   - [Search, Filtering & Sorting Parameters](#search-filtering--sorting-parameters)
-5. [Assumptions Made During Development](#assumptions-made-during-development)
-6. [Key Features by Role](#key-features-by-role)
-7. [Voucher Lifecycle & Workflow](#voucher-lifecycle--workflow)
-8. [Project Structure](#project-structure)
-9. [Submission Checklist Compliance](#submission-checklist-compliance)
-
----
-
-## Overview
-
-**VouchDesk** is an enterprise-grade Expense Voucher Management System engineered to eliminate the inefficiencies and errors of paper-based expense reporting. The system models a real-world enterprise hierarchy with strict **Role-Based Access Control (RBAC)** across three personas:
-
-- 🧑‍💼 **Employee**: Drafts, edits, signs, and submits expense claims.
-- 👔 **Director**: Evaluates pending vouchers, approving with executive signature or rejecting with feedback.
-- 📑 **Accounts**: Audits organizational expenses, applies multi-criteria filters, and prints physical voucher receipts.
-
-The application combines a modern **React 18 (Vite)** single-page application with an **Express.js** REST backend and a **PostgreSQL** relational database.
+- [Project Setup Instructions](#project-setup-instructions)
+  - [Prerequisites](#prerequisites)
+  - [Environment Configuration](#environment-configuration)
+  - [Database Initialization & Seeding](#database-initialization--seeding)
+  - [Running the Application](#running-the-application)
+  - [Demo User Credentials](#demo-user-credentials)
+- [Database Schema Explanation](#database-schema-explanation)
+  - [Entity Relationship Overview](#entity-relationship-overview)
+  - [Table Definitions](#table-definitions)
+  - [Voucher Number Generation](#voucher-number-generation)
+- [API Documentation](#api-documentation)
+  - [Authentication](#authentication)
+  - [Auth Endpoints](#auth-endpoints)
+  - [Dashboard Endpoints](#dashboard-endpoints)
+  - [Voucher Endpoints](#voucher-endpoints)
+  - [Voucher Query Parameters](#voucher-query-parameters)
+- [Assumptions Made During Development](#assumptions-made-during-development)
+- [Project Structure](#project-structure)
 
 ---
 
 ## Project Setup Instructions
 
 ### Prerequisites
-Ensure your local development environment meets the following minimum requirements:
-- **Node.js**: `v18.0.0` or higher
-- **npm**: `v9.0.0` or higher
-- **PostgreSQL**: `v14.0` or higher (running as a local service or remote instance)
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+- **PostgreSQL**: v14.0 or higher (running locally or accessible via network)
 
 ---
 
 ### Environment Configuration
 
-1. Copy the example environment file into `server/.env` (and optionally in project root):
+1. Create a `.env` file in the `server` directory by copying the provided template:
    ```bash
    cd server
    cp .env.example .env
    ```
 
-2. Open `server/.env` in your text editor and adjust credentials to match your PostgreSQL instance:
+2. Open `server/.env` and update the PostgreSQL connection details to match your local setup:
    ```env
    PORT=4000
    DATABASE_URL=postgres://postgres:your_password@localhost:5432/vouchdesk
@@ -77,90 +53,87 @@ Ensure your local development environment meets the following minimum requiremen
 
 | Variable | Description | Default |
 |---|---|---|
-| `PORT` | Port for the Express backend server | `4000` |
-| `DATABASE_URL` | PostgreSQL connection string (`postgres://<user>:<password>@<host>:<port>/<dbname>`) | `postgres://postgres:password@localhost:5432/vouchdesk` |
-| `JWT_SECRET` | Secret key used to sign and verify JSON Web Tokens | `vouchdesk_jwt_secret_2026` |
+| `PORT` | Backend server port | `4000` |
+| `DATABASE_URL` | PostgreSQL connection URL | `postgres://postgres:password@localhost:5432/vouchdesk` |
+| `JWT_SECRET` | Secret key for signing and verifying JWT tokens | `vouchdesk_jwt_secret_2026` |
+
+*(A matching `.env.example` is also located in the project root for reference.)*
 
 ---
 
-### Quick Start (Windows 1-Click)
+### Database Initialization & Seeding
 
-On Windows systems, you can launch both backend and frontend concurrently:
-1. Ensure your PostgreSQL service is running and `server/.env` is configured.
-2. Double-click **`start.bat`** in the repository root (or execute `.\start.bat` in PowerShell/CMD).
-3. The script will automatically launch:
-   - Backend API server on `http://localhost:4000`
-   - Frontend Vite development server on `http://localhost:5173`
-4. Access the web interface at **`http://localhost:5173`**.
-
----
-
-### Step-by-Step Manual Setup (All Platforms)
-
-#### 1. Install Dependencies
-Install packages for both the server and the client:
-```bash
-# Install backend dependencies
-cd server
-npm install
-
-# Install frontend dependencies
-cd ../client
-npm install
-```
-
-#### 2. Initialize and Seed the Database
-Run the automated initialization and seed script:
+Run the seed script from the `server` directory:
 ```bash
 cd server
 node seed.js
 ```
-What `seed.js` does:
-- Connects to your PostgreSQL server's default database.
-- Checks if the `vouchdesk` database exists and creates it automatically if it does not.
-- Executes [`server/schema.sql`](server/schema.sql) to provision tables, check constraints, indexes, and sequences.
-- Hashes passwords using `bcrypt` (10 salt rounds) and seeds default test users for all three roles.
 
-#### 3. Start the Development Servers
+This automated script will:
+1. Connect to the default PostgreSQL database.
+2. Check if the `vouchdesk` database exists and create it if necessary.
+3. Execute [`server/schema.sql`](server/schema.sql) to create tables, constraints, and sequences.
+4. Hash passwords using `bcrypt` and seed initial accounts for each role (`DIRECTOR`, `ACCOUNTS`, `EMPLOYEE`).
 
-Open two terminal sessions:
+---
 
-**Terminal 1 — Backend API Server:**
-```bash
-cd server
-npm run dev
-# Server starts on http://localhost:4000 (hot reload enabled via node --watch)
-```
+### Running the Application
 
-**Terminal 2 — Frontend Application:**
-```bash
-cd client
-npm run dev
-# Client starts on http://localhost:5173 (proxied to port 4000 for /api and /uploads)
-```
+#### Option A: Quick Start (Windows 1-Click)
+If you are on Windows:
+1. Double-click **`start.bat`** (or execute `.\start.bat` in PowerShell / Command Prompt).
+2. The batch script starts both the backend API server and the frontend client in separate windows.
+3. Open **`http://localhost:5173`** in your browser.
 
-Open **`http://localhost:5173`** in your browser to start using VouchDesk.
+#### Option B: Manual Setup (Cross-Platform)
+
+1. **Install dependencies**:
+   ```bash
+   # Install server dependencies
+   cd server
+   npm install
+
+   # Install client dependencies
+   cd ../client
+   npm install
+   ```
+
+2. **Start the backend server**:
+   ```bash
+   cd server
+   npm run dev
+   # Runs on http://localhost:4000
+   ```
+
+3. **Start the frontend client** (in a separate terminal):
+   ```bash
+   cd client
+   npm run dev
+   # Runs on http://localhost:5173
+   ```
+
+4. Navigate to **`http://localhost:5173`** in your web browser.
 
 ---
 
 ### Demo User Credentials
 
-The following demo accounts are seeded automatically by `node seed.js`:
+The database seeder pre-configures test accounts for each role:
 
-| Role | User Name | Email | Password | Employee Code | Intended Use |
+| Role | Name | Email | Password | Employee Code | Notes |
 |---|---|---|---|---|---|
-| **Director** | Diana Director | `director@company.com` | `director123` | `DIR-001` | Review pending queue, sign approvals, reject vouchers |
-| **Accounts** | Alice Accounts | `accounts@company.com` | `accounts123` | `ACC-001` | Organization-wide auditing, filtering & voucher printing |
-| **Employee** | Bob Employee | `bob@company.com` | `employee123` | `EMP-001` | Create claims, edit drafts, upload signature, submit claims |
-| **Employee** | Carol Employee | `carol@company.com` | `employee123` | `EMP-002` | Test multi-employee isolation and independent claim queues |
+| **Director** | Diana Director | `director@company.com` | `director123` | `DIR-001` | Review, sign approvals, reject with reason |
+| **Accounts** | Alice Accounts | `accounts@company.com` | `accounts123` | `ACC-001` | Organization-wide viewing & voucher printing |
+| **Employee** | Bob Employee | `bob@company.com` | `employee123` | `EMP-001` | Create claims, edit drafts, submit with signature |
+| **Employee** | Carol Employee | `carol@company.com` | `employee123` | `EMP-002` | Additional employee for multi-user testing |
 
 ---
 
 ## Database Schema Explanation
 
-The schema is defined in [`server/schema.sql`](server/schema.sql) and executed automatically via [`server/seed.js`](server/seed.js). It is normalized, enforces referential integrity through foreign keys, and protects data validity via column-level constraints.
+The schema is defined in [`server/schema.sql`](server/schema.sql). It enforces referential integrity through foreign keys, validates data with check constraints, and uses sequences for identifier generation.
 
-### Architecture & ER Overview
+### Entity Relationship Overview
 
 ```
  ┌─────────────────────────────────────────┐
@@ -175,7 +148,6 @@ The schema is defined in [`server/schema.sql`](server/schema.sql) and executed a
  │ signature_path      VARCHAR(500)        │             │
  │ created_at          TIMESTAMP           │             │
  └─────────────────────────────────────────┘             │
-                                                         │
                                                          │ 1:N
  ┌─────────────────────────────────────────┐             │
  │                vouchers                 │             │
@@ -203,338 +175,218 @@ The schema is defined in [`server/schema.sql`](server/schema.sql) and executed a
 
 ---
 
-### Entity Breakdown & Schema Definitions
+### Table Definitions
 
-#### 1. `users` Table
-Stores authentication credentials, persona roles, and identity metadata.
+#### `users` Table
+Stores user accounts, hashed credentials, and role privileges.
 
-| Column | Type | Constraints | Explanation |
+| Column | Type | Constraints | Description |
 |---|---|---|---|
-| `id` | `SERIAL` | `PRIMARY KEY` | Auto-incrementing identifier for the user. |
-| `name` | `VARCHAR(255)` | `NOT NULL` | Employee or executive's full display name. |
-| `email` | `VARCHAR(255)` | `NOT NULL UNIQUE` | Unique email used as the login username. |
-| `password_hash` | `VARCHAR(255)` | `NOT NULL` | One-way encrypted password hash generated with `bcrypt` (10 rounds). Plaintext passwords are never stored. |
-| `role` | `VARCHAR(20)` | `CHECK (role IN ('EMPLOYEE', 'DIRECTOR', 'ACCOUNTS'))` | Strict enum constraint restricting system permissions to valid personas. |
-| `employee_code` | `VARCHAR(50)` | Nullable | Organization employee identifier (e.g. `EMP-001`, `DIR-001`). Displayed on voucher audit cards and printouts. |
-| `signature_path` | `VARCHAR(500)` | Nullable | Relative path (e.g. `/uploads/abc.png`) to the user's default signature image on disk. |
+| `id` | `SERIAL` | `PRIMARY KEY` | Unique numeric identifier for the user. |
+| `name` | `VARCHAR(255)` | `NOT NULL` | User full name. |
+| `email` | `VARCHAR(255)` | `NOT NULL UNIQUE` | User login email. |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL` | `bcrypt` hash (10 salt rounds) of the password. Plaintext is never stored. |
+| `role` | `VARCHAR(20)` | `CHECK (role IN ('EMPLOYEE', 'DIRECTOR', 'ACCOUNTS'))` | User role controlling accessible routes and actions. |
+| `employee_code` | `VARCHAR(50)` | Nullable | Organization employee identifier (e.g. `EMP-001`). |
+| `signature_path` | `VARCHAR(500)` | Nullable | File path to user's saved default signature image in `uploads/`. |
 | `created_at` | `TIMESTAMP` | `DEFAULT NOW()` | Record creation timestamp. |
 
-#### 2. `vouchers` Table
-Core transaction table tracking expense claims through their lifecycle.
+#### `vouchers` Table
+Stores expense claims, review states, digital signature references, and audit logs.
 
-| Column | Type | Constraints | Explanation |
+| Column | Type | Constraints | Description |
 |---|---|---|---|
-| `id` | `SERIAL` | `PRIMARY KEY` | Internal database surrogate primary key. |
-| `voucher_number` | `VARCHAR(50)` | `NOT NULL UNIQUE` | Public, business-facing reference code automatically generated via sequence as `VCH-YYYY-NNNN`. |
-| `voucher_date` | `DATE` | `DEFAULT CURRENT_DATE` | Date the voucher record was created. Defaults to the system date. |
-| `expense_date` | `DATE` | `NOT NULL` | Historical date on which the actual expenditure occurred. |
-| `department` | `VARCHAR(255)` | `NOT NULL` | Submitting organizational unit (e.g. Engineering, Marketing, Sales). |
-| `expense_title` | `VARCHAR(255)` | `NOT NULL` | Brief title summarizing the claim (e.g. "Client Lunch Meeting"). |
-| `expense_category` | `VARCHAR(255)` | `NOT NULL` | Expense classification (Travel, Food, Accommodation, Office Supplies, etc.). |
-| `description` | `TEXT` | Nullable | Additional context or justification notes from the employee. |
-| `amount` | `NUMERIC(12,2)` | `CHECK (amount > 0)` | Monetary claim amount. Uses fixed-point numeric representation to avoid floating-point inaccuracies. Constrained to positive values. |
-| `status` | `VARCHAR(30)` | `CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'))` | Current lifecycle state. Defaults to `DRAFT`. |
-| `employee_id` | `INTEGER` | `REFERENCES users(id)` | Foreign key identifying the employee who authored the voucher. Enforces user isolation. |
-| `employee_signature_path` | `VARCHAR(500)` | Nullable | Disk path to the submitter's digital signature captured at submission. |
-| `director_id` | `INTEGER` | `REFERENCES users(id)` | Foreign key identifying the director who approved or rejected the voucher. |
-| `director_signature_path` | `VARCHAR(500)` | Nullable | Disk path to the director's signature captured during the approval action. |
-| `approval_date` | `TIMESTAMP` | Nullable | Exact timestamp when director approved the voucher. |
-| `rejection_reason` | `TEXT` | Nullable | Compulsory explanation recorded when a director rejects a voucher. |
-| `created_at` | `TIMESTAMP` | `DEFAULT NOW()` | Timestamp of record creation. |
-| `updated_at` | `TIMESTAMP` | `DEFAULT NOW()` | Timestamp of the most recent record modification. |
+| `id` | `SERIAL` | `PRIMARY KEY` | Internal database surrogate key. |
+| `voucher_number` | `VARCHAR(50)` | `NOT NULL UNIQUE` | Unique reference code generated as `VCH-YYYY-NNNN`. |
+| `voucher_date` | `DATE` | `DEFAULT CURRENT_DATE` | Date the voucher was created. |
+| `expense_date` | `DATE` | `NOT NULL` | Date when the expense occurred. |
+| `department` | `VARCHAR(255)` | `NOT NULL` | Submitting department (e.g. Engineering, Sales). |
+| `expense_title` | `VARCHAR(255)` | `NOT NULL` | Short title summarizing the expense claim. |
+| `expense_category` | `VARCHAR(255)` | `NOT NULL` | Category (Travel, Food, Accommodation, Office Supplies, etc.). |
+| `description` | `TEXT` | Nullable | Optional detailed notes from the submitter. |
+| `amount` | `NUMERIC(12,2)` | `CHECK (amount > 0)` | Claim amount; uses fixed-point `NUMERIC` to avoid floating-point errors. Must be $> 0$. |
+| `status` | `VARCHAR(30)` | `CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'))` | Current lifecycle state (defaults to `DRAFT`). |
+| `employee_id` | `INTEGER` | `REFERENCES users(id)` | Foreign key referencing the creating employee. |
+| `employee_signature_path` | `VARCHAR(500)` | Nullable | Path to employee signature image attached on submission. |
+| `director_id` | `INTEGER` | `REFERENCES users(id)` | Foreign key referencing the director who approved or rejected. |
+| `director_signature_path` | `VARCHAR(500)` | Nullable | Path to director signature image attached on approval. |
+| `approval_date` | `TIMESTAMP` | Nullable | Timestamp of director approval. |
+| `rejection_reason` | `TEXT` | Nullable | Mandatory justification text provided upon rejection. |
+| `created_at` | `TIMESTAMP` | `DEFAULT NOW()` | Record creation timestamp. |
+| `updated_at` | `TIMESTAMP` | `DEFAULT NOW()` | Record last modification timestamp. |
 
 ---
 
-### Auto-Incrementing Voucher Number Sequence
+### Voucher Number Generation
 
-To avoid race conditions and generate human-readable, sequential identifiers, a PostgreSQL sequence `voucher_number_seq` is utilized:
+Voucher numbers are generated using a PostgreSQL sequence (`voucher_number_seq`):
 
 ```sql
 CREATE SEQUENCE IF NOT EXISTS voucher_number_seq START 1;
 ```
 
-In the `vouchers` table definition, the default value evaluates:
+The `vouchers` table default expression formats this sequence into a human-readable identifier:
 ```sql
 DEFAULT ('VCH-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(NEXTVAL('voucher_number_seq')::TEXT, 4, '0'))
 ```
-This guarantees unique, sequentially padded identifiers such as `VCH-2026-0001`, `VCH-2026-0002`, independent of transaction rollbacks or concurrent inserts.
 
----
-
-### Database Migration & Seed Script
-
-The complete migration and seed logic lives in [`server/seed.js`](server/seed.js). It is idempotent:
-- Connects to `postgres` to ensure target database creation.
-- Applies [`server/schema.sql`](server/schema.sql) with `CREATE TABLE IF NOT EXISTS` clauses.
-- Applies `ON CONFLICT (email) DO NOTHING` when inserting seed users to prevent duplication on multiple runs.
+This ensures unique, zero-padded identifiers (e.g. `VCH-2026-0001`, `VCH-2026-0002`) generated at the database level, preventing collision during concurrent submissions.
 
 ---
 
 ## API Documentation
 
-All API routes are prefixed with `/api`. Protected routes require the standard Authorization Bearer header:
+Base URL: `http://localhost:4000/api`
+
+### Authentication
+Protected endpoints require a JSON Web Token sent in the authorization header:
 ```http
-Authorization: Bearer <jwt_token>
+Authorization: Bearer <token>
 ```
-
-### Authentication & Session Flow
-
-- **Login**: `POST /api/auth/login` verifies email and bcrypt password hash, then issues a signed JWT token containing `{ id, role, email }` with a 24-hour expiration.
-- **Client Storage**: The token is stored in `localStorage` and automatically appended to outgoing requests via [`client/src/api.js`](client/src/api.js).
-- **Session Expiry**: When a request encounters an HTTP 401 response, client-side session storage is cleared and the user is redirected to `/login`.
+Tokens are generated upon login and expire after 24 hours.
 
 ---
 
-### Auth & Profile Endpoints
+### Auth Endpoints
 
-#### 1. Authenticate User
-- **Method / Path**: `POST /api/auth/login`
-- **Access**: Public
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | No | Authenticates user; returns JWT token and user info |
+| `GET` | `/api/auth/me` | Yes (Any role) | Returns current authenticated user profile |
+| `POST` | `/api/auth/signature` | Yes (Any role) | Uploads profile signature image (`multipart/form-data`) |
+
+#### `POST /api/auth/login`
 - **Request Body**:
   ```json
   {
-    "email": "director@company.com",
-    "password": "director123"
+    "email": "bob@company.com",
+    "password": "employee123"
   }
   ```
-- **Success Response (`200 OK`)**:
+- **Response (`200 OK`)**:
   ```json
   {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": 1,
-      "name": "Diana Director",
-      "email": "director@company.com",
-      "role": "DIRECTOR",
-      "employee_code": "DIR-001",
+      "id": 3,
+      "name": "Bob Employee",
+      "email": "bob@company.com",
+      "role": "EMPLOYEE",
+      "employee_code": "EMP-001",
       "signature_path": null
     }
   }
   ```
-- **Error Responses**: `400 Bad Request` (missing fields), `401 Unauthorized` (invalid credentials).
-
-#### 2. Get Current Authenticated Profile
-- **Method / Path**: `GET /api/auth/me`
-- **Access**: Any Authenticated Role
-- **Success Response (`200 OK`)**:
-  ```json
-  {
-    "id": 1,
-    "name": "Diana Director",
-    "email": "director@company.com",
-    "role": "DIRECTOR",
-    "employee_code": "DIR-001",
-    "signature_path": "/uploads/a8f2...png",
-    "created_at": "2026-10-12T11:45:00.000Z"
-  }
-  ```
-
-#### 3. Upload User Profile Signature
-- **Method / Path**: `POST /api/auth/signature`
-- **Access**: Any Authenticated Role
-- **Content-Type**: `multipart/form-data`
-- **Form Field**: `signature` (image file: `.png`, `.jpg`, `.jpeg`, max 2MB)
-- **Success Response (`200 OK`)**:
-  ```json
-  {
-    "signature_path": "/uploads/4f19b26e0ca117.png"
-  }
-  ```
 
 ---
 
-### Dashboard Analytics Endpoints
+### Dashboard Endpoints
 
-#### Get Role-Tailored Dashboard Metrics
-- **Method / Path**: `GET /api/dashboard`
-- **Access**: Any Authenticated Role
-- **Responses (Role-Specific)**:
-  - **`EMPLOYEE`**:
-    ```json
-    {
-      "total": "4",
-      "draft": "1",
-      "pending": "1",
-      "approved": "2",
-      "rejected": "0",
-      "total_amount_claimed": "14500.00"
-    }
-    ```
-  - **`DIRECTOR`**:
-    ```json
-    {
-      "pending_count": "3",
-      "approved_today": "2",
-      "rejected_today": "1",
-      "total_pending_amount": "28400.00",
-      "last_activity": [
-        {
-          "id": 5,
-          "voucher_number": "VCH-2026-0005",
-          "status": "APPROVED",
-          "updated_at": "2026-10-12T12:00:00.000Z",
-          "employee_name": "Bob Employee",
-          "amount": "3200.00"
-        }
-      ]
-    }
-    ```
-  - **`ACCOUNTS`**:
-    ```json
-    {
-      "total": "12",
-      "pending": "3",
-      "approved": "8",
-      "rejected": "1",
-      "total_approved_amount": "94200.00",
-      "last_approved": [
-        {
-          "id": 4,
-          "voucher_number": "VCH-2026-0004",
-          "amount": "8900.00",
-          "approval_date": "2026-10-12T11:15:00.000Z",
-          "employee_name": "Carol Employee"
-        }
-      ]
-    }
-    ```
+#### `GET /api/dashboard`
+- **Auth Required**: Yes (Any role)
+- **Description**: Returns role-tailored summary statistics.
+- **Responses by Role**:
+  - **Employee**: Total count, count by status (`draft`, `pending`, `approved`, `rejected`), and `total_amount_claimed`.
+  - **Director**: `pending_count`, `approved_today`, `rejected_today`, `total_pending_amount`, and list of 5 recent decisions (`last_activity`).
+  - **Accounts**: Total count, status counts, `total_approved_amount`, and list of 5 recently approved vouchers (`last_approved`).
 
 ---
 
-### Vouchers Endpoints
+### Voucher Endpoints
 
-| Method | Endpoint | Allowed Role(s) | Description |
+| Method | Endpoint | Allowed Roles | Description |
 |---|---|---|---|
-| `GET` | `/api/vouchers` | All Roles | List vouchers matching role context & filters |
-| `GET` | `/api/vouchers/:id` | All Roles | Fetch single voucher details with creator & director info |
+| `GET` | `/api/vouchers` | Any | List vouchers (filtered by role and query params) |
+| `GET` | `/api/vouchers/:id` | Any | Fetch single voucher details by ID |
 | `POST` | `/api/vouchers` | `EMPLOYEE` | Create a new voucher in `DRAFT` status |
-| `PUT` | `/api/vouchers/:id` | `EMPLOYEE` | Update an existing `DRAFT` voucher (author only) |
-| `DELETE` | `/api/vouchers/:id` | `EMPLOYEE` | Delete an existing `DRAFT` voucher (author only) |
-| `POST` | `/api/vouchers/:id/submit` | `EMPLOYEE` | Submit `DRAFT` for director approval (requires signature) |
-| `POST` | `/api/vouchers/:id/approve` | `DIRECTOR` | Approve `PENDING_APPROVAL` voucher (requires signature) |
-| `POST` | `/api/vouchers/:id/reject` | `DIRECTOR` | Reject `PENDING_APPROVAL` voucher (requires reason) |
+| `PUT` | `/api/vouchers/:id` | `EMPLOYEE` | Update a `DRAFT` voucher (author only) |
+| `DELETE` | `/api/vouchers/:id` | `EMPLOYEE` | Delete a `DRAFT` voucher (author only) |
+| `POST` | `/api/vouchers/:id/submit` | `EMPLOYEE` | Submit `DRAFT` for approval with signature |
+| `POST` | `/api/vouchers/:id/approve` | `DIRECTOR` | Approve pending voucher with signature file |
+| `POST` | `/api/vouchers/:id/reject` | `DIRECTOR` | Reject pending voucher with reason |
 
-#### 1. Create Voucher Draft
-- **`POST /api/vouchers`** (Role: `EMPLOYEE`)
-- **Body**:
+#### `POST /api/vouchers`
+- **Request Body**:
   ```json
   {
     "expense_date": "2026-10-10",
     "department": "Engineering",
-    "expense_title": "Annual AWS Cloud Architecture Summit",
-    "expense_category": "Travel",
-    "description": "Registration ticket and round-trip transport.",
-    "amount": "12500.00"
+    "expense_title": "Cloud Server Hosting",
+    "expense_category": "Office Supplies",
+    "description": "Monthly compute and storage costs.",
+    "amount": "4500.00"
   }
   ```
-- **Response (`201 Created`)**: Returns newly created voucher record with `status: "DRAFT"`.
+- **Response (`201 Created`)**: Returns the created voucher with `status: "DRAFT"`.
 
-#### 2. Submit Voucher for Approval
-- **`POST /api/vouchers/:id/submit`** (Role: `EMPLOYEE`)
+#### `POST /api/vouchers/:id/submit`
 - **Content-Type**: `multipart/form-data`
-- **Form Field**: `signature` *(optional if employee already has a profile signature)*
-- **Response (`200 OK`)**: Updates status to `PENDING_APPROVAL` and records `employee_signature_path`.
+- **Field**: `signature` (optional if employee has saved profile signature).
+- **Response (`200 OK`)**: Transitions voucher to `PENDING_APPROVAL` and stores `employee_signature_path`.
 
-#### 3. Approve Voucher
-- **`POST /api/vouchers/:id/approve`** (Role: `DIRECTOR`)
+#### `POST /api/vouchers/:id/approve`
 - **Content-Type**: `multipart/form-data`
-- **Form Field**: `signature` *(required)*
-- **Response (`200 OK`)**: Updates status to `APPROVED`, records `director_id`, `director_signature_path`, and `approval_date: NOW()`.
+- **Field**: `signature` (image file required).
+- **Response (`200 OK`)**: Transitions voucher to `APPROVED`, records `director_id`, `director_signature_path`, and `approval_date`.
 
-#### 4. Reject Voucher
-- **`POST /api/vouchers/:id/reject`** (Role: `DIRECTOR`)
-- **Body**:
+#### `POST /api/vouchers/:id/reject`
+- **Request Body**:
   ```json
   {
-    "rejection_reason": "Receipt was missing VAT breakdown. Please re-submit with full invoice."
+    "rejection_reason": "Receipt was missing itemized tax breakdown."
   }
   ```
-- **Response (`200 OK`)**: Updates status to `REJECTED`, records `director_id` and `rejection_reason`.
+- **Response (`200 OK`)**: Transitions voucher to `REJECTED`, records `director_id` and `rejection_reason`.
 
 ---
 
-### Search, Filtering & Sorting Parameters
+### Voucher Query Parameters
 
 `GET /api/vouchers` supports the following query parameters:
 
-| Parameter | Type | Example | Description |
-|---|---|---|---|
-| `search` | String | `?search=VCH-2026` | Case-insensitive substring match against `voucher_number` or `expense_title`. |
-| `status` | String | `?status=PENDING_APPROVAL` | Filter by `DRAFT`, `PENDING_APPROVAL`, `APPROVED`, or `REJECTED`. |
-| `department` | String | `?department=Marketing` | Partial match on department name. |
-| `category` | String | `?category=Travel` | Exact match on expense category. |
-| `employeeName` | String | `?employeeName=Bob` | Filter by employee name (applicable for Director and Accounts). |
-| `dateFrom` | Date | `?dateFrom=2026-10-01` | Filter expenses occurring on or after date (`YYYY-MM-DD`). |
-| `dateTo` | Date | `?dateTo=2026-10-31` | Filter expenses occurring on or before date (`YYYY-MM-DD`). |
-| `minAmount` | Number | `?minAmount=1000` | Filter expenses with amount $\ge$ min. |
-| `maxAmount` | Number | `?maxAmount=50000` | Filter expenses with amount $\le$ max. |
-| `sortBy` | String | `?sortBy=amount` | Sort column: `created_at`, `updated_at`, `amount`, `voucher_date`, `expense_date`, or `voucher_number`. |
-| `order` | String | `?order=asc` | Sorting direction: `asc` or `desc` (default: `desc`). |
+| Parameter | Type | Description |
+|---|---|---|
+| `search` | String | Case-insensitive match on `voucher_number` or `expense_title` |
+| `status` | String | Filter by status (`DRAFT`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`) |
+| `department` | String | Partial match on department name |
+| `category` | String | Exact match on expense category |
+| `employeeName` | String | Substring match on submitter name (Director & Accounts only) |
+| `dateFrom` | Date (`YYYY-MM-DD`) | Filter expense date $\ge$ specified date |
+| `dateTo` | Date (`YYYY-MM-DD`) | Filter expense date $\le$ specified date |
+| `minAmount` | Number | Filter vouchers with amount $\ge$ min |
+| `maxAmount` | Number | Filter vouchers with amount $\le$ max |
+| `sortBy` | String | Column to sort by (`created_at`, `updated_at`, `amount`, `voucher_date`, `expense_date`, `voucher_number`) |
+| `order` | String | Sort order: `asc` or `desc` (default: `desc`) |
 
 ---
 
 ## Assumptions Made During Development
 
-1. **Workflow State Mapping**:
-   - "Submitted" and "Pending Approval" describe the identical state (`PENDING_APPROVAL`). When an employee submits their voucher, it transitions immediately from `DRAFT` to `PENDING_APPROVAL`. There is no intermediate multi-tier queue.
+1. **Status Progression ("Submitted" vs. "Pending Approval")**:
+   - The statuses "Submitted" and "Pending Approval" describe the same lifecycle phase (`PENDING_APPROVAL`). When an employee submits a voucher, it moves directly from `DRAFT` to `PENDING_APPROVAL` without an intermediate queue.
 
-2. **Draft Ownership & Data Privacy**:
-   - Vouchers in `DRAFT` status are private to the employee who created them.
-   - Other employees, Directors, and Accounts cannot see or query draft vouchers created by someone else.
-   - Only the creator of a voucher can modify (`PUT`) or delete (`DELETE`) it, and only while it remains in `DRAFT` state.
+2. **Draft Access & Privacy**:
+   - Vouchers in `DRAFT` status are visible only to the employee who created them. Directors and Accounts users do not see draft vouchers in lists or dashboard metrics.
+   - Only the creating employee can update (`PUT`) or delete (`DELETE`) a voucher, and only while it is in `DRAFT` status.
 
-3. **Immutability of Terminal Decisions**:
-   - Once a voucher is marked as `APPROVED` or `REJECTED`, its core details (amount, category, department, dates) become permanently **read-only** across all roles to ensure an unalterable audit trail.
-   - A rejected voucher cannot be re-opened; if corrections are required, the employee submits a new claim referencing the previous claim.
+3. **Immutability of Final States**:
+   - Once a voucher reaches a terminal status (`APPROVED` or `REJECTED`), its data cannot be modified or deleted by any user or role. This guarantees a reliable audit trail.
 
-4. **Digital Signature Handling**:
-   - Employees may upload a reusable signature to their account profile or provide a signature upon submission.
-   - Directors must provide an explicit signature at the time of each approval action to confirm executive review of that specific claim.
-   - Signature files are stored on disk in `server/uploads/` with 32-character cryptographically random filenames to prevent overwrite collisions and path traversal attacks.
+4. **Digital Signature Rules**:
+   - Employees can submit a voucher using either a pre-saved profile signature or by uploading a fresh signature at submission time.
+   - Directors must upload their signature freshly at the time of each approval to confirm explicit executive sign-off.
+   - Uploaded signatures are saved locally in `server/uploads/` with 32-character randomized filenames to prevent collisions and path traversal.
 
-5. **Mandatory Rejection Feedback**:
-   - Directors cannot reject a voucher without submitting a non-empty `rejection_reason`. This ensures accountability and clear feedback for the submitting employee.
+5. **Mandatory Rejection Reason**:
+   - A voucher cannot be rejected without providing an explanatory `rejection_reason`. This ensures the employee receives clear feedback on why the claim was denied.
 
-6. **Accounts Persona Role & Printing**:
-   - The `ACCOUNTS` persona serves an auditing and record-keeping function. Accounts users have read-only visibility into all non-draft vouchers across the organization.
-   - Accounts cannot approve or reject vouchers. They are provided a dedicated print action (`window.print()`) with print-optimized CSS rules to generate paper receipts or PDF records.
+6. **Accounts Role Responsibilities**:
+   - The Accounts role has read-only access to all non-draft vouchers across the organization for auditing purposes.
+   - Accounts personnel cannot approve or reject vouchers.
+   - Accounts personnel can view and print approved vouchers using the built-in print layout (`window.print()`) formatted via print-specific CSS.
 
 7. **Monetary Precision & Currency**:
-   - Amounts are stored using PostgreSQL `NUMERIC(12, 2)` to eliminate floating-point arithmetic errors. All claims are displayed with two decimal places formatted in INR (₹). Amounts must be strictly positive (`> 0`).
-
----
-
-## Key Features by Role
-
-| Feature | Employee | Director | Accounts |
-|---|:---:|:---:|:---:|
-| Create & Save Voucher Drafts | ✅ | ❌ | ❌ |
-| Edit & Delete Own Drafts | ✅ | ❌ | ❌ |
-| Submit Voucher with Signature | ✅ | ❌ | ❌ |
-| View Own Voucher History | ✅ | ❌ | ❌ |
-| View Pending Approvals Queue | ❌ | ✅ | ❌ |
-| Approve Vouchers (with Signature) | ❌ | ✅ | ❌ |
-| Reject Vouchers (with Reason) | ❌ | ✅ | ❌ |
-| View All Company Vouchers | ❌ | ✅ | ✅ |
-| Advanced Multi-Field Filtering & Sorting | ✅ *(own)* | ✅ *(all)* | ✅ *(all)* |
-| Print Formal Voucher Document | ❌ | ❌ | ✅ |
-| Role-Tailored Metrics Dashboard | ✅ | ✅ | ✅ |
-
----
-
-## Voucher Lifecycle & Workflow
-
-```mermaid
-flowchart TD
-    A([Employee Creates Claim]) --> B[DRAFT]
-    B -->|Edit / Delete| B
-    B -->|Attach Signature & Submit| C[PENDING_APPROVAL]
-    C -->|Director Review| D{Decision}
-    D -->|Upload Signature & Approve| E[APPROVED]
-    D -->|Provide Rejection Reason| F[REJECTED]
-    E --> G([Accounts Auditing & Printing])
-    F --> H([Read-only Record])
-```
+   - Amounts are represented using `NUMERIC(12, 2)` to avoid IEEE floating-point inaccuracies. All amounts are displayed in INR (₹) and must be strictly positive (`> 0`).
 
 ---
 
@@ -544,60 +396,37 @@ flowchart TD
 VouchDesk/
 ├── .env.example                # Root environment template
 ├── .gitignore                  # Git ignore rules
-├── README.md                   # Complete system documentation
+├── README.md                   # Project documentation
 ├── start.bat                   # 1-Click launcher for Windows
 ├── server/                     # Backend Express.js REST API
-│   ├── .env.example            # Backend environment template
-│   ├── index.js                # App bootstrap & static file routes
+│   ├── .env.example            # Server environment template
+│   ├── index.js                # Express app entry point
 │   ├── db.js                   # PostgreSQL connection pool
-│   ├── schema.sql              # Database schema & sequence creation
-│   ├── seed.js                 # Automatic DB creator & demo user seeder
+│   ├── schema.sql              # Database schema & sequence definitions
+│   ├── seed.js                 # Database initialization & user seeder
 │   ├── middleware.js           # JWT auth, role validation & multer upload
-│   ├── package.json            # Backend scripts and dependencies
+│   ├── package.json            # Server dependencies and scripts
 │   ├── routes/
-│   │   ├── auth.js             # Authentication & signature endpoints
-│   │   ├── vouchers.js         # Voucher CRUD, submission & approval endpoints
-│   │   └── dashboard.js        # Aggregated role-based dashboard statistics
-│   └── uploads/                # Local storage directory for digital signatures
+│   │   ├── auth.js             # Authentication & profile routes
+│   │   ├── vouchers.js         # Voucher CRUD, submission, approval routes
+│   │   └── dashboard.js        # Dashboard metric aggregation routes
+│   └── uploads/                # Directory for uploaded signature images
 └── client/                     # Frontend Vite + React application
-    ├── index.html              # Single page entry HTML
+    ├── index.html              # HTML entry point
     ├── vite.config.js          # Vite config with API proxy
     ├── tailwind.config.js      # Tailwind CSS configuration
-    ├── package.json            # Frontend scripts and dependencies
+    ├── package.json            # Client dependencies and scripts
     └── src/
-        ├── main.jsx            # React root DOM mount
-        ├── App.jsx             # Navigation bar & protected routes
-        ├── AuthContext.jsx      # Global auth context & token storage
-        ├── api.js              # Fetch client with automatic JWT header
-        ├── styles.css          # Styles and print stylesheet (@media print)
-        ├── components/ui/      # Reusable UI primitives
+        ├── main.jsx            # React root mount
+        ├── App.jsx             # Router, navbar & protected route guards
+        ├── AuthContext.jsx      # Authentication context & session storage
+        ├── api.js              # Fetch wrapper with JWT injection
+        ├── styles.css          # Global styling & print stylesheet
+        ├── components/ui/      # UI components
         └── pages/
-            ├── Login.jsx       # Authentication login screen
-            ├── Dashboard.jsx   # Role-based dashboard analytics cards
-            ├── VoucherForm.jsx # Expense entry, draft saving & submit form
-            ├── VoucherList.jsx # Multi-field filterable voucher table
-            └── VoucherDetails.jsx # Detailed voucher view, director action & print
+            ├── Login.jsx       # Login view
+            ├── Dashboard.jsx   # Role-based dashboard view
+            ├── VoucherForm.jsx # Voucher creation & draft edit view
+            ├── VoucherList.jsx # Filterable voucher list view
+            └── VoucherDetails.jsx # Voucher detail view, approval actions & print
 ```
-
----
-
-## Submission Checklist Compliance
-
-This repository fulfills all stated assignment submission requirements:
-
-| Submission Requirement | Repository Location / Verification |
-|---|---|
-| **GitHub Repository** | Contains full, runnable source code for both client and server. |
-| **Project Setup Instructions** | Included in [Project Setup Instructions](#project-setup-instructions) with prerequisites, 1-click Windows launcher, and cross-platform manual steps. |
-| **Database Schema Explanation** | Included in [Database Schema Explanation](#database-schema-explanation) with ER diagram, constraints, sequence explanation, and column definitions. |
-| **API Documentation** | Included in [API Documentation](#api-documentation) detailing endpoints, request/response bodies, query parameters, and auth headers. |
-| **Assumptions Made During Development** | Included in [Assumptions Made During Development](#assumptions-made-during-development) detailing workflow states, role boundaries, immutability, and signatures. |
-| **Database Schema or Migration Files** | Provisioned in [`server/schema.sql`](server/schema.sql) and executed via [`server/seed.js`](server/seed.js). |
-| **`.env.example` File** | Included in both [`.env.example`](.env.example) (root) and [`server/.env.example`](server/.env.example). |
-| **Screenshots / Demo Walkthrough** | UI components, print styles, and role workflows can be tested directly with the pre-seeded [Demo Credentials](#demo-user-credentials). |
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
