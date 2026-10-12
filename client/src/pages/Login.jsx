@@ -29,7 +29,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1>VoucherDesk</h1>
+        <h1>VouchDesk</h1>
         <h2>Sign In</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
@@ -49,3 +49,4 @@ export default function Login() {
     </div>
   );
 }
+

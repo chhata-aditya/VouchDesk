@@ -6,15 +6,17 @@ const { Client } = require('pg');
 
 async function initDb() {
   const dbUrl = process.env.DATABASE_URL;
-  // Connect to default 'postgres' database first to ensure 'voucherdesk' exists
-  const rootUrl = dbUrl.replace(/\/voucherdesk(\?.*)?$/, '/postgres$1');
+  // Connect to default 'postgres' database first to ensure target database exists
+  const match = dbUrl.match(/\/([^/?]+)(\?.*)?$/);
+  const dbName = match ? match[1] : 'vouchdesk';
+  const rootUrl = dbUrl.replace(/\/[^/?]+(\?.*)?$/, '/postgres$1');
   const client = new Client({ connectionString: rootUrl });
   try {
     await client.connect();
-    const check = await client.query("SELECT 1 FROM pg_database WHERE datname = 'voucherdesk'");
+    const check = await client.query(`SELECT 1 FROM pg_database WHERE datname = '${dbName}'`);
     if (check.rows.length === 0) {
-      await client.query('CREATE DATABASE voucherdesk');
-      console.log('Created database voucherdesk');
+      await client.query(`CREATE DATABASE "${dbName}"`);
+      console.log(`Created database ${dbName}`);
     }
   } catch (err) {
     console.log('Database check/create skipped:', err.message);

@@ -13,7 +13,7 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand"><Link to="/">VoucherDesk</Link></div>
+      <div className="navbar-brand"><Link to="/">VouchDesk</Link></div>
       <div className="navbar-links">
         <Link to="/">Dashboard</Link>
         {user?.role === 'EMPLOYEE' && (
@@ -72,3 +72,4 @@ export default function App() {
     </AuthProvider>
   );
 }
+

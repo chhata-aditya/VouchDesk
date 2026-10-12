@@ -1,8 +1,8 @@
 @echo off
-echo Starting VoucherDesk...
+echo Starting VouchDesk...
 
-start "VoucherDesk Server" cmd /k "cd /d %~dp0server && npm run dev"
+start "VouchDesk Server" cmd /k "cd /d %~dp0server && npm run dev"
 timeout /t 2 /nobreak >nul
-start "VoucherDesk Client" cmd /k "cd /d %~dp0client && npm run dev"
+start "VouchDesk Client" cmd /k "cd /d %~dp0client && npm run dev"
 
 echo Both windows launched.

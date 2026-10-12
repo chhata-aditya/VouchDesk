@@ -18,7 +18,7 @@ app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'VoucherDesk API is running' });
+  res.json({ status: 'ok', message: 'VouchDesk API is running' });
 });
 
 const PORT = process.env.PORT || 4000;
